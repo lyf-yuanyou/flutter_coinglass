@@ -6,7 +6,7 @@ import '../data/models.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 
 const List<String> _categoryLabels = <String>[
-  '指标',
+  '首页',
   '清算地图',
   '爆仓信息',
   '多空比',
