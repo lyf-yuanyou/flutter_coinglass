@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
-import '../router/app_router.dart' show ReminderRoute;
+import '../router/app_router.dart' show LoginRoute, ReminderRoute;
+import 'my_profile_tab.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 
 const List<String> _categoryLabels = <String>[
@@ -67,6 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ..showSnackBar(
         const SnackBar(content: Text('功能开发中，敬请期待。')),
       );
+  }
+
+  void _openLogin() {
+    context.router.push(const LoginRoute());
   }
 
   void _openReminderCenter() {
@@ -199,7 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
             const _ComingSoonView(title: '清算地图'),
             const _ComingSoonView(title: '爆仓信息'),
             const _ComingSoonView(title: '多空比'),
-            const _ComingSoonView(title: '资金费率'),
+            MyProfileTab(
+              onLoginTap: _openLogin,
+              onPlaceholderTap: _showComingSoon,
+            ),
           ],
         );
       }),
