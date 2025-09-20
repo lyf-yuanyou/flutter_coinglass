@@ -1,9 +1,11 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
-import 'reminder_screen.dart';
+import '../router/app_router.gr.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 
 const List<String> _categoryLabels = <String>[
@@ -14,23 +16,29 @@ const List<String> _categoryLabels = <String>[
   '资金费率',
 ];
 
-class HomeScreen extends StatefulWidget {
+@RoutePage()
+class HomeScreen extends StatefulWidget implements AutoRouteWrapper {
   const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    if (!Get.isRegistered<HomeController>()) {
+      Get.put<HomeController>(
+        HomeController(Get.find<CoinGlassRepository>()),
+      );
+    }
+    return this;
+  }
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final CoinGlassRepository _repository = CoinGlassRepository(
-    apiKey: const String.fromEnvironment('COINGLASS_SECRET'),
-  );
-  late Future<_DashboardData> _dashboardFuture;
+  late final HomeController _controller;
 
   final NumberFormat _priceFormat =
       NumberFormat.simpleCurrency(decimalDigits: 2);
-
-  int _currentIndex = 0;
 
   static const List<CustomBottomNavItem> _navItems = <CustomBottomNavItem>[
     CustomBottomNavItem(icon: Icons.analytics_outlined, label: '指标'),
@@ -46,25 +54,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _dashboardFuture = _loadDashboard();
+    _controller = Get.find<HomeController>();
   }
 
-  Future<_DashboardData> _loadDashboard() async {
-    final metrics = await _repository.fetchCoinMetrics();
-    final fundingRates = await _repository.fetchFundingRates();
-    final liquidation = await _repository.fetchLiquidationStats();
-    return _DashboardData(
-      metrics: metrics,
-      fundingRates: fundingRates,
-      liquidation: liquidation,
-    );
-  }
-
-  Future<void> _refresh() async {
-    setState(() {
-      _dashboardFuture = _loadDashboard();
-    });
-    await _dashboardFuture;
+  Future<void> _refresh() {
+    return _controller.refreshDashboard();
   }
 
   void _showComingSoon() {
@@ -76,11 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openReminderCenter() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ReminderScreen(),
-      ),
-    );
+    context.router.push(const ReminderRoute());
   }
 
   String _formatLargeNumber(double value) {
@@ -121,79 +111,77 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDashboard(BuildContext context) {
     return SafeArea(
-      child: FutureBuilder<_DashboardData>(
-        future: _dashboardFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      child: Obx(() {
+        if (_controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (snapshot.hasError) {
-            return _ErrorState(
-              error: snapshot.error,
-              onRetry: _refresh,
-            );
-          }
-
-          final data = snapshot.data;
-          if (data == null) {
-            return const SizedBox.shrink();
-          }
-
-          final displayedMetrics = data.metrics.take(6).toList();
-          final indicatorItems = displayedMetrics
-              .map(
-                (metric) => _IndicatorItemData(
-                  emoji: _emojiForChange(metric.change24h),
-                  title: '${metric.symbol} 永续合约',
-                  primaryValue: _formatLargeNumber(metric.openInterest),
-                  valueLabel: '持仓量',
-                  trend: metric.change24h,
-                  highlights: <String>[
-                    '24h成交 ${_formatLargeNumber(metric.volume24h)}',
-                    '多空比 ${metric.longShortRatio.toStringAsFixed(2)}',
-                    '价格 ${_priceFormat.format(metric.price)}',
-                  ],
-                ),
-              )
-              .toList();
-
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: <Widget>[
-                const SizedBox(height: 12),
-                _HomeHeader(
-                  onNotificationTap: _openReminderCenter,
-                  onMoreTap: _showComingSoon,
-                ),
-                const SizedBox(height: 16),
-                _SearchField(onTap: _showComingSoon),
-                const SizedBox(height: 16),
-                const _CategoryScroller(categories: _categoryLabels),
-                const SizedBox(height: 24),
-                if (indicatorItems.isEmpty)
-                  _EmptyState(
-                    description: '暂无热门指标数据，稍后再试试~',
-                    icon: Icons.bar_chart,
-                  )
-                else
-                  ...indicatorItems
-                      .map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _IndicatorTile(data: item),
-                        ),
-                      )
-                      .toList(),
-                const SizedBox(height: 32),
-              ],
-            ),
+        final Object? error = _controller.error.value;
+        if (error != null) {
+          return _ErrorState(
+            error: error,
+            onRetry: _refresh,
           );
-        },
-      ),
+        }
+
+        final _DashboardData? data = _controller.dashboardData.value;
+        if (data == null) {
+          return const SizedBox.shrink();
+        }
+
+        final displayedMetrics = data.metrics.take(6).toList();
+        final indicatorItems = displayedMetrics
+            .map(
+              (metric) => _IndicatorItemData(
+                emoji: _emojiForChange(metric.change24h),
+                title: '${metric.symbol} 永续合约',
+                primaryValue: _formatLargeNumber(metric.openInterest),
+                valueLabel: '持仓量',
+                trend: metric.change24h,
+                highlights: <String>[
+                  '24h成交 ${_formatLargeNumber(metric.volume24h)}',
+                  '多空比 ${metric.longShortRatio.toStringAsFixed(2)}',
+                  '价格 ${_priceFormat.format(metric.price)}',
+                ],
+              ),
+            )
+            .toList();
+
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: <Widget>[
+              const SizedBox(height: 12),
+              _HomeHeader(
+                onNotificationTap: _openReminderCenter,
+                onMoreTap: _showComingSoon,
+              ),
+              const SizedBox(height: 16),
+              _SearchField(onTap: _showComingSoon),
+              const SizedBox(height: 16),
+              const _CategoryScroller(categories: _categoryLabels),
+              const SizedBox(height: 24),
+              if (indicatorItems.isEmpty)
+                _EmptyState(
+                  description: '暂无热门指标数据，稍后再试试~',
+                  icon: Icons.bar_chart,
+                )
+              else
+                ...indicatorItems
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _IndicatorTile(data: item),
+                      ),
+                    )
+                    .toList(),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -203,32 +191,78 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceVariant
           .withOpacity(theme.brightness == Brightness.dark ? 0.3 : 1),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: <Widget>[
-          _buildDashboard(context),
-          const _ComingSoonView(title: '清算地图'),
-          const _ComingSoonView(title: '爆仓信息'),
-          const _ComingSoonView(title: '多空比'),
-          const _ComingSoonView(title: '资金费率'),
-        ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        items: _navItems,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          if (_currentIndex != index) {
-            setState(() => _currentIndex = index);
-          }
-        },
+      body: Obx(() {
+        return IndexedStack(
+          index: _controller.currentIndex.value,
+          children: <Widget>[
+            _buildDashboard(context),
+            const _ComingSoonView(title: '清算地图'),
+            const _ComingSoonView(title: '爆仓信息'),
+            const _ComingSoonView(title: '多空比'),
+            const _ComingSoonView(title: '资金费率'),
+          ],
+        );
+      }),
+      bottomNavigationBar: Obx(
+        () => CustomBottomNavBar(
+          items: _navItems,
+          currentIndex: _controller.currentIndex.value,
+          onTap: _controller.setIndex,
+        ),
       ),
     );
   }
 
   @override
   void dispose() {
-    _repository.dispose();
+    if (Get.isRegistered<HomeController>()) {
+      Get.delete<HomeController>();
+    }
     super.dispose();
+  }
+}
+
+class HomeController extends GetxController {
+  HomeController(this._repository);
+
+  final CoinGlassRepository _repository;
+
+  final RxBool isLoading = true.obs;
+  final Rx<_DashboardData?> dashboardData = Rx<_DashboardData?>(null);
+  final Rx<Object?> error = Rx<Object?>(null);
+  final RxInt currentIndex = 0.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    refreshDashboard();
+  }
+
+  Future<void> refreshDashboard() async {
+    try {
+      isLoading.value = true;
+      error.value = null;
+
+      final metrics = await _repository.fetchCoinMetrics();
+      final fundingRates = await _repository.fetchFundingRates();
+      final liquidation = await _repository.fetchLiquidationStats();
+
+      dashboardData.value = _DashboardData(
+        metrics: metrics,
+        fundingRates: fundingRates,
+        liquidation: liquidation,
+      );
+    } catch (e) {
+      error.value = e;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void setIndex(int index) {
+    if (currentIndex.value != index) {
+      currentIndex.value = index;
+    }
   }
 }
 

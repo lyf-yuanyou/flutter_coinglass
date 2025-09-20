@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-import 'presentation/home_screen.dart';
+import 'app_bindings.dart';
+import 'router/app_router.dart';
 import 'theme.dart';
 
 class CoinGlassApp extends StatelessWidget {
-  const CoinGlassApp({super.key});
+  CoinGlassApp({super.key, AppRouter? appRouter})
+      : _appRouter = appRouter ?? AppRouter();
+
+  final AppRouter _appRouter;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp.router(
       title: 'CoinGlass',
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      initialBinding: AppBindings(),
+      routerDelegate: _appRouter.delegate(),
+      routeInformationParser: _appRouter.defaultRouteParser(),
     );
   }
 }
