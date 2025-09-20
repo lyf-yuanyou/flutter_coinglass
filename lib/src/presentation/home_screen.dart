@@ -3,6 +3,15 @@ import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
+import 'widgets/custom_bottom_nav_bar.dart';
+
+const List<String> _categoryLabels = <String>[
+  '指标',
+  '清算地图',
+  '爆仓信息',
+  '多空比',
+  '资金费率',
+];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,8 +26,21 @@ class _HomeScreenState extends State<HomeScreen> {
   );
   late Future<_DashboardData> _dashboardFuture;
 
-  final NumberFormat _priceFormat = NumberFormat.simpleCurrency(decimalDigits: 2);
-  final NumberFormat _compactFormat = NumberFormat.compactSimpleCurrency(decimalDigits: 0);
+  final NumberFormat _priceFormat =
+      NumberFormat.simpleCurrency(decimalDigits: 2);
+
+  int _currentIndex = 0;
+
+  static const List<CustomBottomNavItem> _navItems = <CustomBottomNavItem>[
+    CustomBottomNavItem(icon: Icons.analytics_outlined, label: '指标'),
+    CustomBottomNavItem(icon: Icons.public, label: '清算地图'),
+    CustomBottomNavItem(icon: Icons.warning_amber_outlined, label: '爆仓信息'),
+    CustomBottomNavItem(icon: Icons.trending_up, label: '多空比'),
+    CustomBottomNavItem(
+      icon: Icons.account_balance_wallet_outlined,
+      label: '资金费率',
+    ),
+  ];
 
   @override
   void initState() {
@@ -44,26 +66,53 @@ class _HomeScreenState extends State<HomeScreen> {
     await _dashboardFuture;
   }
 
-  @override
-  void dispose() {
-    _repository.dispose();
-    super.dispose();
+  void _showComingSoon() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('功能开发中，敬请期待。')),
+      );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('CoinGlass Dashboard'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            onPressed: () => _refresh(),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: FutureBuilder<_DashboardData>(
+  String _formatLargeNumber(double value) {
+    final double absValue = value.abs();
+    if (absValue >= 1e12) {
+      return '${(value / 1e12).toStringAsFixed(2)}万亿';
+    }
+    if (absValue >= 1e8) {
+      return '${(value / 1e8).toStringAsFixed(2)}亿';
+    }
+    if (absValue >= 1e4) {
+      return '${(value / 1e4).toStringAsFixed(2)}万';
+    }
+    if (absValue >= 1e3) {
+      return '${(value / 1e3).toStringAsFixed(2)}K';
+    }
+    if (absValue == value) {
+      return value.toStringAsFixed(value >= 100 ? 0 : 2);
+    }
+    return value.toStringAsFixed(2);
+  }
+
+  String _emojiForChange(double change) {
+    if (change >= 5) {
+      return '🚀';
+    }
+    if (change >= 0.5) {
+      return '😄';
+    }
+    if (change <= -5) {
+      return '💣';
+    }
+    if (change < 0) {
+      return '😟';
+    }
+    return '😐';
+  }
+
+  Widget _buildDashboard(BuildContext context) {
+    return SafeArea(
+      child: FutureBuilder<_DashboardData>(
         future: _dashboardFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -83,69 +132,53 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final displayedMetrics = data.metrics.take(6).toList();
+          final indicatorItems = displayedMetrics
+              .map(
+                (metric) => _IndicatorItemData(
+                  emoji: _emojiForChange(metric.change24h),
+                  title: '${metric.symbol} 永续合约',
+                  primaryValue: _formatLargeNumber(metric.openInterest),
+                  valueLabel: '持仓量',
+                  trend: metric.change24h,
+                  highlights: <String>[
+                    '24h成交 ${_formatLargeNumber(metric.volume24h)}',
+                    '多空比 ${metric.longShortRatio.toStringAsFixed(2)}',
+                    '价格 ${_priceFormat.format(metric.price)}',
+                  ],
+                ),
+              )
+              .toList();
 
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                const SizedBox(height: 8),
-                const _SectionHeader(
-                  title: '热门合约',
-                  subtitle: '关注主流币种的价格、持仓与多空比',
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: <Widget>[
+                const SizedBox(height: 12),
+                _HomeHeader(
+                  onNotificationTap: _showComingSoon,
+                  onMoreTap: _showComingSoon,
                 ),
-                SizedBox(
-                  height: 210,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: displayedMetrics.length,
-                    itemBuilder: (context, index) {
-                      final metric = displayedMetrics[index];
-                      return _CoinMetricsCard(
-                        metrics: metric,
-                        priceFormat: _priceFormat,
-                        compactFormat: _compactFormat,
-                      );
-                    },
-                  ),
-                ),
+                const SizedBox(height: 16),
+                _SearchField(onTap: _showComingSoon),
+                const SizedBox(height: 16),
+                const _CategoryScroller(categories: _categoryLabels),
                 const SizedBox(height: 24),
-                const _SectionHeader(
-                  title: '资金费率',
-                  subtitle: '监测不同交易所的多空情绪',
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: data.fundingRates
-                        .map(
-                          (rate) => _FundingRateTile(
-                            rate: rate,
-                            percentText: '${rate.rate.toStringAsFixed(3)}%',
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const _SectionHeader(
-                  title: '爆仓数据',
-                  subtitle: '了解市场杠杆风险的集中区域',
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: data.liquidation
-                        .map(
-                          (stat) => _LiquidationTile(
-                            stat: stat,
-                            formatter: _compactFormat,
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
+                if (indicatorItems.isEmpty)
+                  _EmptyState(
+                    description: '暂无热门指标数据，稍后再试试~',
+                    icon: Icons.bar_chart,
+                  )
+                else
+                  ...indicatorItems
+                      .map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _IndicatorTile(data: item),
+                        ),
+                      )
+                      .toList(),
                 const SizedBox(height: 32),
               ],
             ),
@@ -154,30 +187,334 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceVariant
+          .withOpacity(theme.brightness == Brightness.dark ? 0.3 : 1),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: <Widget>[
+          _buildDashboard(context),
+          const _ComingSoonView(title: '清算地图'),
+          const _ComingSoonView(title: '爆仓信息'),
+          const _ComingSoonView(title: '多空比'),
+          const _ComingSoonView(title: '资金费率'),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        items: _navItems,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (_currentIndex != index) {
+            setState(() => _currentIndex = index);
+          }
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _repository.dispose();
+    super.dispose();
+  }
+}
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({
+    required this.onNotificationTap,
+    required this.onMoreTap,
+  });
+
+  final VoidCallback onNotificationTap;
+  final VoidCallback onMoreTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: <Widget>[
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              '指标',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '掌握全球合约市场的实时动态',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        _RoundIconButton(
+          icon: Icons.notifications_none_outlined,
+          onTap: onNotificationTap,
+        ),
+        const SizedBox(width: 12),
+        _RoundIconButton(
+          icon: Icons.more_horiz,
+          onTap: onMoreTap,
+        ),
+      ],
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color backgroundColor = theme.colorScheme.surface;
+    return Material(
+      color: backgroundColor,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(
+            icon,
+            size: 20,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TextField(
+      readOnly: true,
+      onTap: onTap,
+      decoration: InputDecoration(
+        hintText: '搜索币种',
+        prefixIcon: Icon(
+          Icons.search,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        filled: true,
+        fillColor: theme.colorScheme.surface,
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryScroller extends StatelessWidget {
+  const _CategoryScroller({required this.categories});
+
+  final List<String> categories;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          return _CategoryChip(
+            label: categories[index],
+            selected: index == 0,
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.label, required this.selected});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color textColor = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected
+            ? theme.colorScheme.primary.withOpacity(0.1)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: selected
+              ? theme.colorScheme.primary.withOpacity(0.4)
+              : theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: textColor,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+class _IndicatorItemData {
+  const _IndicatorItemData({
+    required this.emoji,
+    required this.title,
+    required this.primaryValue,
+    required this.valueLabel,
+    required this.trend,
+    this.highlights = const <String>[],
+  });
+
+  final String emoji;
+  final String title;
+  final String primaryValue;
+  final String valueLabel;
+  final double trend;
+  final List<String> highlights;
+}
+
+class _IndicatorTile extends StatelessWidget {
+  const _IndicatorTile({required this.data});
+
+  final _IndicatorItemData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color shadowColor =
+        isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05);
+    final Color changeColor = data.trend > 0
+        ? Colors.green.shade600
+        : data.trend < 0
+            ? Colors.red.shade600
+            : theme.colorScheme.outline;
+    final String changeText = data.trend > 0
+        ? '+${data.trend.toStringAsFixed(2)}%'
+        : data.trend < 0
+            ? '${data.trend.toStringAsFixed(2)}%'
+            : '0.00%';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: _gradientForTrend(context, data.trend),
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              data.emoji,
+              style: const TextStyle(fontSize: 28),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        data.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        Text(
+                          data.primaryValue,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          data.valueLabel,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: data.highlights
+                            .map((highlight) => _InfoBadge(text: highlight))
+                            .toList(),
+                      ),
+                    ),
+                    _ChangeBadge(color: changeColor, text: changeText),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -185,244 +522,136 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _CoinMetricsCard extends StatelessWidget {
-  const _CoinMetricsCard({
-    required this.metrics,
-    required this.priceFormat,
-    required this.compactFormat,
-  });
-
-  final CoinMetrics metrics;
-  final NumberFormat priceFormat;
-  final NumberFormat compactFormat;
-
-  Color _trendColor(BuildContext context) {
-    if (metrics.change24h > 0) {
-      return Colors.green.shade600;
-    }
-    if (metrics.change24h < 0) {
-      return Colors.red.shade600;
-    }
-    return Theme.of(context).colorScheme.secondary;
+List<Color> _gradientForTrend(BuildContext context, double trend) {
+  final theme = Theme.of(context);
+  if (trend > 0) {
+    return <Color>[
+      theme.colorScheme.primary.withOpacity(0.18),
+      theme.colorScheme.primary.withOpacity(0.08),
+    ];
   }
+  if (trend < 0) {
+    return <Color>[
+      Colors.red.shade100,
+      Colors.red.shade50,
+    ];
+  }
+  return <Color>[
+    theme.colorScheme.surfaceVariant.withOpacity(0.5),
+    theme.colorScheme.surfaceVariant.withOpacity(0.2),
+  ];
+}
+
+class _InfoBadge extends StatelessWidget {
+  const _InfoBadge({required this.text});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _trendColor(context);
-
-    return SizedBox(
-      width: 260,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                    child: Text(_initials(metrics.symbol)),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    metrics.symbol,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Chip(
-                    label: Text(
-                      metrics.change24h >= 0
-                          ? '+${metrics.change24h.toStringAsFixed(2)}%'
-                          : '${metrics.change24h.toStringAsFixed(2)}%',
-                    ),
-                    backgroundColor: color.withOpacity(0.1),
-                    labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                priceFormat.format(metrics.price),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _MetricRow(
-                label: '24h成交量',
-                value: compactFormat.format(metrics.volume24h),
-              ),
-              const SizedBox(height: 12),
-              _MetricRow(
-                label: '持仓量',
-                value: compactFormat.format(metrics.openInterest),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '多空比 ${metrics.longShortRatio.toStringAsFixed(2)}',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: (metrics.longShortRatio / 2).clamp(0.0, 1.0),
-                color: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              ),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );
   }
 }
 
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.label, required this.value});
+class _ChangeBadge extends StatelessWidget {
+  const _ChangeBadge({required this.color, required this.text});
 
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.hintColor,
-          ),
-        ),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FundingRateTile extends StatelessWidget {
-  const _FundingRateTile({required this.rate, required this.percentText});
-
-  final FundingRate rate;
-  final String percentText;
-
-  Color _trendColor(BuildContext context) {
-    if (rate.rate > 0) {
-      return Colors.green.shade600;
-    }
-    if (rate.rate < 0) {
-      return Colors.red.shade600;
-    }
-    return Theme.of(context).colorScheme.secondary;
-  }
+  final Color color;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = _trendColor(context);
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.secondaryContainer,
-          child: Text(_initials(rate.symbol)),
-        ),
-        title: Text('${rate.symbol} · ${rate.exchange}'),
-        subtitle: const Text('资金费率'),
-        trailing: Text(
-          percentText,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
 }
 
-class _LiquidationTile extends StatelessWidget {
-  const _LiquidationTile({required this.stat, required this.formatter});
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.description, required this.icon});
 
-  final LiquidationStat stat;
-  final NumberFormat formatter;
+  final String description;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final total = stat.total;
-    final longPct = total == 0 ? 0.5 : stat.longLiquidations / total;
-    final shortPct = total == 0 ? 0.5 : stat.shortLiquidations / total;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Column(
+        children: <Widget>[
+          Icon(
+            icon,
+            size: 48,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+class _ComingSoonView extends StatelessWidget {
+  const _ComingSoonView({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                  child: Text(_initials(stat.exchange)),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  stat.exchange,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  formatter.format(total),
-                  style: theme.textTheme.titleMedium,
-                ),
-              ],
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              Icons.construction,
+              size: 48,
+              color: theme.colorScheme.primary,
             ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('多头: ${formatter.format(stat.longLiquidations)}'),
-                Text('空头: ${formatter.format(stat.shortLiquidations)}'),
-              ],
+            const SizedBox(height: 16),
+            Text(
+              '$title功能开发中',
+              style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  flex: (longPct * 1000).round(),
-                  child: Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade400,
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: (shortPct * 1000).round(),
-                  child: Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade400,
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              '敬请期待',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -445,7 +674,7 @@ class _ErrorState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             Icon(
               Icons.wifi_off,
               size: 48,
@@ -484,18 +713,4 @@ class _DashboardData {
   final List<CoinMetrics> metrics;
   final List<FundingRate> fundingRates;
   final List<LiquidationStat> liquidation;
-}
-
-String _initials(String value) {
-  if (value.isEmpty) {
-    return '--';
-  }
-  final sanitized = value.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
-  if (sanitized.isEmpty) {
-    return '--';
-  }
-  if (sanitized.length >= 2) {
-    return sanitized.substring(0, 2);
-  }
-  return sanitized.padRight(2, sanitized[0]);
 }
