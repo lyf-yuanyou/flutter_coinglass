@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
+import 'reminder_screen.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 
 const List<String> _categoryLabels = <String>[
@@ -72,6 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ..showSnackBar(
         const SnackBar(content: Text('功能开发中，敬请期待。')),
       );
+  }
+
+  void _openReminderCenter() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ReminderScreen(),
+      ),
+    );
   }
 
   String _formatLargeNumber(double value) {
@@ -157,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: <Widget>[
                 const SizedBox(height: 12),
                 _HomeHeader(
-                  onNotificationTap: _showComingSoon,
+                  onNotificationTap: _openReminderCenter,
                   onMoreTap: _showComingSoon,
                 ),
                 const SizedBox(height: 16),
