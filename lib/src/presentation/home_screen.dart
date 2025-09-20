@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
-import '../router/app_router.gr.dart';
+import '../router/app_router.dart' show ReminderRoute;
 import 'widgets/custom_bottom_nav_bar.dart';
 
 const List<String> _categoryLabels = <String>[
@@ -41,13 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
       NumberFormat.simpleCurrency(decimalDigits: 2);
 
   static const List<CustomBottomNavItem> _navItems = <CustomBottomNavItem>[
-    CustomBottomNavItem(icon: Icons.analytics_outlined, label: '指标'),
-    CustomBottomNavItem(icon: Icons.public, label: '清算地图'),
-    CustomBottomNavItem(icon: Icons.warning_amber_outlined, label: '爆仓信息'),
-    CustomBottomNavItem(icon: Icons.trending_up, label: '多空比'),
+    CustomBottomNavItem(icon: Icons.analytics_outlined, label: '首页'),
+    CustomBottomNavItem(icon: Icons.public, label: '行情'),
+    CustomBottomNavItem(icon: Icons.warning_amber_outlined, label: '图表'),
+    CustomBottomNavItem(icon: Icons.trending_up, label: '新闻'),
     CustomBottomNavItem(
       icon: Icons.account_balance_wallet_outlined,
-      label: '资金费率',
+      label: '我的',
     ),
   ];
 

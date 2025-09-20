@@ -1,20 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// **************************************************************************
+// AutoRouterGenerator
+// **************************************************************************
+
+// ignore_for_file: type=lint
+// coverage:ignore-file
+
 part of 'app_router.dart';
 
-// ***************************************************************************
-// AutoRouterGenerator
-// ***************************************************************************
-
-class _$AppRouter extends RootStackRouter {
+abstract class _$AppRouter extends RootStackRouter {
+  // ignore: unused_element
   _$AppRouter({super.navigatorKey});
 
   @override
-  final Map<String, PageFactory> pagesMap = <String, PageFactory>{
+  final Map<String, PageFactory> pagesMap = {
     HomeRoute.name: (routeData) {
       return AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const HomeScreen(),
+        child: WrappedRoute(child: const HomeScreen()),
       );
     },
     ReminderRoute.name: (routeData) {
@@ -24,27 +28,15 @@ class _$AppRouter extends RootStackRouter {
       );
     },
   };
-
-  @override
-  List<RouteConfig> get routes => <RouteConfig>[
-        RouteConfig(
-          HomeRoute.name,
-          path: '/',
-        ),
-        RouteConfig(
-          ReminderRoute.name,
-          path: '/reminder',
-        ),
-      ];
 }
 
 /// generated route for
 /// [HomeScreen]
 class HomeRoute extends PageRouteInfo<void> {
-  const HomeRoute()
+  const HomeRoute({List<PageRouteInfo>? children})
       : super(
           HomeRoute.name,
-          path: '/',
+          initialChildren: children,
         );
 
   static const String name = 'HomeRoute';
@@ -55,10 +47,10 @@ class HomeRoute extends PageRouteInfo<void> {
 /// generated route for
 /// [ReminderScreen]
 class ReminderRoute extends PageRouteInfo<void> {
-  const ReminderRoute()
+  const ReminderRoute({List<PageRouteInfo>? children})
       : super(
           ReminderRoute.name,
-          path: '/reminder',
+          initialChildren: children,
         );
 
   static const String name = 'ReminderRoute';
