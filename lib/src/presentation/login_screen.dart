@@ -1,7 +1,6 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-@RoutePage()
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -36,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: IconButton(
                 icon: const Icon(Icons.close),
                 tooltip: '关闭',
-                onPressed: () => context.router.maybePop(),
+                onPressed: () => Get.back(),
               ),
             ),
             const SizedBox(height: 12),

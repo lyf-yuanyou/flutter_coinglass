@@ -1,11 +1,10 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
-import '../router/app_router.dart' show LoginRoute, ReminderRoute;
+import '../router/app_pages.dart' show AppRoutes;
 import 'my_profile_tab.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 
@@ -49,22 +48,11 @@ const List<String> _chartActionLabels = <String>[
 const Color _positiveTrendColor = Color(0xFF26A69A);
 const Color _negativeTrendColor = Color(0xFFE53935);
 
-@RoutePage()
-class HomeScreen extends StatefulWidget implements AutoRouteWrapper {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
-
-  @override
-  Widget wrappedRoute(BuildContext context) {
-    if (!Get.isRegistered<HomeController>()) {
-      Get.put<HomeController>(
-        HomeController(Get.find<CoinGlassRepository>()),
-      );
-    }
-    return this;
-  }
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -90,6 +78,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    if (!Get.isRegistered<HomeController>()) {
+      Get.put<HomeController>(
+        HomeController(Get.find<CoinGlassRepository>()),
+      );
+    }
     _controller = Get.find<HomeController>();
   }
 
@@ -106,11 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openLogin() {
-    context.router.push(const LoginRoute());
+    Get.toNamed(AppRoutes.login);
   }
 
   void _openReminderCenter() {
-    context.router.push(const ReminderRoute());
+    Get.toNamed(AppRoutes.reminder);
   }
 
   String _formatLargeNumber(double value) {
