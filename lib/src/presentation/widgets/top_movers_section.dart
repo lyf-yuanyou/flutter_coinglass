@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../data/models.dart';
 import '../controllers/market_controller.dart';
 
+/// 热门币种展示模块：监听控制器的状态并负责渲染列表/错误/加载态。
 class TopMoversSection extends StatelessWidget {
   const TopMoversSection({
     required this.controller,
@@ -18,8 +19,9 @@ class TopMoversSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // 使用紧凑货币格式显示价格，同时手动指定美元符号。
     final NumberFormat priceFormat =
-        NumberFormat.compactSimpleCurrency(name: '\$');
+        NumberFormat.compactSimpleCurrency(locale: 'en_US');
 
     return Obx(() {
       final bool isLoading = controller.isLoading.value;
@@ -117,6 +119,7 @@ class TopMoversSection extends StatelessWidget {
   }
 }
 
+/// 单个热门币种卡片，展示名称、排名、价格与涨跌幅。
 class _CoinCard extends StatelessWidget {
   const _CoinCard({
     required this.coin,
@@ -203,6 +206,7 @@ class _CoinCard extends StatelessWidget {
   }
 }
 
+/// 空/错误状态占位组件，支持附带重试操作。
 class _ErrorPlaceholder extends StatelessWidget {
   const _ErrorPlaceholder({
     required this.message,

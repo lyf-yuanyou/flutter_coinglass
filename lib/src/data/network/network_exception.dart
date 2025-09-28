@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+/// 统一的网络异常模型：将 Dio 抛出的错误封装成结构化对象，
+/// 既保留用户可读的信息，也方便开发者调试排查。
 class NetworkException implements Exception {
   NetworkException({
     required this.message,
@@ -8,6 +10,7 @@ class NetworkException implements Exception {
     this.type,
   });
 
+  /// 将 Dio 的异常转换为 [NetworkException]，提取状态码、原始数据等上下文。
   factory NetworkException.fromDio(DioException error) {
     final Response<dynamic>? response = error.response;
     final int? status = response?.statusCode;
@@ -22,11 +25,19 @@ class NetworkException implements Exception {
     );
   }
 
+  /// 面向用户的友好提示文本。
   final String message;
+
+  /// HTTP 状态码（若有返回）。
   final int? statusCode;
+
+  /// 原始响应数据或附加信息，便于日志与埋点。
   final dynamic details;
+
+  /// Dio 定义的异常类型，可用于上层做精细化处理。
   final DioExceptionType? type;
 
+  /// 根据不同异常类型生成默认提示文案。
   static String _mapMessage(DioException error, int? statusCode) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:

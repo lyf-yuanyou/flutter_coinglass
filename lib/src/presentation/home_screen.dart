@@ -79,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     _controller = Get.find<HomeController>();
 
+    // 热门币种模块依赖单独的仓库与控制器，这里做懒加载注册。
     if (!Get.isRegistered<MarketController>()) {
       Get.put<MarketController>(
         MarketController(Get.find<MarketRepository>()),
@@ -87,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _marketController = Get.find<MarketController>();
   }
 
+  /// 下拉刷新：并行刷新仪表盘数据与热门币种。
   Future<void> _refresh() async {
     await Future.wait(<Future<void>>[
       _controller.refreshDashboard(),
