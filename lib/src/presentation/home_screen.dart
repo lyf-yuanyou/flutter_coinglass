@@ -23,12 +23,7 @@ const List<String> _marketSegmentLabels = <String>[
   '筛选',
 ];
 
-const List<String> _marketFilterLabels = <String>[
-  '自选',
-  '持仓量排行',
-  '份额',
-  '交易所',
-];
+const List<String> _marketFilterLabels = <String>['自选', '持仓量排行', '份额', '交易所'];
 
 const List<String> _chartTimeframes = <String>[
   '分时',
@@ -39,11 +34,7 @@ const List<String> _chartTimeframes = <String>[
   '更多',
 ];
 
-const List<String> _chartActionLabels = <String>[
-  '指标',
-  '深度',
-  '成交',
-];
+const List<String> _chartActionLabels = <String>['指标', '深度', '成交'];
 
 const Color _positiveTrendColor = Color(0xFF26A69A);
 const Color _negativeTrendColor = Color(0xFFE53935);
@@ -58,8 +49,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _controller;
 
-  final NumberFormat _priceFormat =
-      NumberFormat.simpleCurrency(decimalDigits: 2);
+  final NumberFormat _priceFormat = NumberFormat.simpleCurrency(
+    decimalDigits: 2,
+  );
   final NumberFormat _wholeNumberFormat = NumberFormat('#,##0');
   final NumberFormat _twoDecimalFormat = NumberFormat('#,##0.00');
   final NumberFormat _smallNumberFormat = NumberFormat('#,##0.0000');
@@ -79,9 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     if (!Get.isRegistered<HomeController>()) {
-      Get.put<HomeController>(
-        HomeController(Get.find<CoinGlassRepository>()),
-      );
+      Get.put<HomeController>(HomeController(Get.find<CoinGlassRepository>()));
     }
     _controller = Get.find<HomeController>();
   }
@@ -93,9 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showComingSoon() {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('功能开发中，敬请期待。')),
-      );
+      ..showSnackBar(const SnackBar(content: Text('功能开发中，敬请期待。')));
   }
 
   void _openLogin() {
@@ -156,10 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         if (error != null && data == null) {
-          return _ErrorState(
-            error: error,
-            onRetry: _refresh,
-          );
+          return _ErrorState(error: error, onRetry: _refresh);
         }
 
         if (data == null) {
@@ -252,327 +237,294 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboard(BuildContext context) {
-    return _buildDataDrivenView(
-      (context, data) {
-        final displayedMetrics = data.metrics.take(6).toList();
-        final List<_IndicatorItemData> indicatorItems = displayedMetrics
-            .map(
-              (CoinMetrics metric) => _IndicatorItemData(
-                emoji: _emojiForChange(metric.change24h),
-                title: '${metric.symbol} 永续合约',
-                primaryValue: _formatLargeNumber(metric.openInterest),
-                valueLabel: '持仓量',
-                trend: metric.change24h,
-                highlights: <String>[
-                  '24h成交 ${_formatLargeNumber(metric.volume24h)}',
-                  '多空比 ${metric.longShortRatio.toStringAsFixed(2)}',
-                  '价格 ${_priceFormat.format(metric.price)}',
-                ],
-              ),
-            )
-            .toList();
-
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: <Widget>[
-            const SizedBox(height: 12),
-            _HomeHeader(
-              onNotificationTap: _openReminderCenter,
-              onMoreTap: _showComingSoon,
+    return _buildDataDrivenView((context, data) {
+      final displayedMetrics = data.metrics.take(6).toList();
+      final List<_IndicatorItemData> indicatorItems = displayedMetrics
+          .map(
+            (CoinMetrics metric) => _IndicatorItemData(
+              emoji: _emojiForChange(metric.change24h),
+              title: '${metric.symbol} 永续合约',
+              primaryValue: _formatLargeNumber(metric.openInterest),
+              valueLabel: '持仓量',
+              trend: metric.change24h,
+              highlights: <String>[
+                '24h成交 ${_formatLargeNumber(metric.volume24h)}',
+                '多空比 ${metric.longShortRatio.toStringAsFixed(2)}',
+                '价格 ${_priceFormat.format(metric.price)}',
+              ],
             ),
-            const SizedBox(height: 16),
-            _SearchField(onTap: _showComingSoon),
-            const SizedBox(height: 16),
-            const _CategoryScroller(categories: _categoryLabels),
-            const SizedBox(height: 24),
-            if (indicatorItems.isEmpty)
-              _EmptyState(
-                description: '暂无热门指标数据，稍后再试试~',
-                icon: Icons.bar_chart,
-              )
-            else
-              ...indicatorItems
-                  .map(
-                    (_IndicatorItemData item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _IndicatorTile(data: item),
-                    ),
-                  )
-                  .toList(),
-            const SizedBox(height: 32),
-          ],
-        );
-      },
-    );
+          )
+          .toList();
+
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: <Widget>[
+          const SizedBox(height: 12),
+          _HomeHeader(
+            onNotificationTap: _openReminderCenter,
+            onMoreTap: _showComingSoon,
+          ),
+          const SizedBox(height: 16),
+          _SearchField(onTap: _showComingSoon),
+          const SizedBox(height: 16),
+          const _CategoryScroller(categories: _categoryLabels),
+          const SizedBox(height: 24),
+          if (indicatorItems.isEmpty)
+            _EmptyState(description: '暂无热门指标数据，稍后再试试~', icon: Icons.bar_chart)
+          else
+            ...indicatorItems
+                .map(
+                  (_IndicatorItemData item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _IndicatorTile(data: item),
+                  ),
+                )
+                .toList(),
+          const SizedBox(height: 32),
+        ],
+      );
+    });
   }
 
   Widget _buildMarketHome(BuildContext context) {
-    return _buildDataDrivenView(
-      (context, data) {
-        final List<CoinMetrics> coins = data.metrics;
+    return _buildDataDrivenView((context, data) {
+      final List<CoinMetrics> coins = data.metrics;
 
-        return ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: <Widget>[
-            const SizedBox(height: 12),
-            _MarketHeader(
-              onSearchTap: _showComingSoon,
-              onFilterTap: _showComingSoon,
-            ),
-            const SizedBox(height: 16),
-            _StaticChipScroller(
-              items: _marketSegmentLabels,
-              onTap: (_) => _showComingSoon(),
-            ),
-            const SizedBox(height: 12),
-            _StaticChipScroller(
-              items: _marketFilterLabels,
-              dense: true,
-              onTap: (_) => _showComingSoon(),
-            ),
-            const SizedBox(height: 20),
-            const _MarketListHeader(),
-            const Divider(height: 1),
-            const SizedBox(height: 4),
-            if (coins.isEmpty)
-              _EmptyState(
-                description: '暂无行情数据，稍后再试试~',
-                icon: Icons.show_chart,
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: coins.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (BuildContext context, int index) {
-                  final CoinMetrics coin = coins[index];
-                  final String changeText = _formatPercent(coin.change24h);
-                  final Color changeColor =
-                      coin.change24h >= 0 ? _positiveTrendColor : _negativeTrendColor;
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: <Widget>[
+          const SizedBox(height: 12),
+          _MarketHeader(
+            onSearchTap: _showComingSoon,
+            onFilterTap: _showComingSoon,
+          ),
+          const SizedBox(height: 16),
+          _StaticChipScroller(
+            items: _marketSegmentLabels,
+            onTap: (_) => _showComingSoon(),
+          ),
+          const SizedBox(height: 12),
+          _StaticChipScroller(
+            items: _marketFilterLabels,
+            dense: true,
+            onTap: (_) => _showComingSoon(),
+          ),
+          const SizedBox(height: 20),
+          const _MarketListHeader(),
+          const Divider(height: 1),
+          const SizedBox(height: 4),
+          if (coins.isEmpty)
+            _EmptyState(description: '暂无行情数据，稍后再试试~', icon: Icons.show_chart)
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: coins.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (BuildContext context, int index) {
+                final CoinMetrics coin = coins[index];
+                final String changeText = _formatPercent(coin.change24h);
+                final Color changeColor = coin.change24h >= 0
+                    ? _positiveTrendColor
+                    : _negativeTrendColor;
 
-                  return _MarketCoinTile(
-                    metric: coin,
-                    priceText: _formatMarketPrice(coin.price),
-                    openInterestText: _formatLargeNumber(coin.openInterest),
-                    volumeText: _formatLargeNumber(coin.volume24h),
-                    changeText: changeText,
-                    changeColor: changeColor,
-                    accentColor: _colorForSymbol(coin.symbol),
-                    onTap: _showComingSoon,
-                  );
-                },
-              ),
-            const SizedBox(height: 24),
-          ],
-        );
-      },
-    );
+                return _MarketCoinTile(
+                  metric: coin,
+                  priceText: _formatMarketPrice(coin.price),
+                  openInterestText: _formatLargeNumber(coin.openInterest),
+                  volumeText: _formatLargeNumber(coin.volume24h),
+                  changeText: changeText,
+                  changeColor: changeColor,
+                  accentColor: _colorForSymbol(coin.symbol),
+                  onTap: _showComingSoon,
+                );
+              },
+            ),
+          const SizedBox(height: 24),
+        ],
+      );
+    });
   }
 
   Widget _buildChartHome(BuildContext context) {
-    return _buildDataDrivenView(
-      (context, data) {
-        if (data.metrics.isEmpty) {
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: const <Widget>[
-              SizedBox(height: 60),
-              _EmptyState(
-                description: '暂无图表数据，稍后再试试~',
-                icon: Icons.show_chart,
-              ),
-            ],
-          );
-        }
-
-        final CoinMetrics coin =
-            _findCoin(data.metrics, 'ETH') ?? data.metrics.first;
-        final FundingRate? fundingRate =
-            _findFundingRate(data.fundingRates, coin.symbol);
-        final List<_ChartCandle> candles = _sampleEthCandles;
-
-        double highestPrice = candles.first.high;
-        double lowestPrice = candles.first.low;
-        for (final _ChartCandle candle in candles) {
-          if (candle.high > highestPrice) {
-            highestPrice = candle.high;
-          }
-          if (candle.low < lowestPrice) {
-            lowestPrice = candle.low;
-          }
-        }
-
-        final double fundingPercent = (fundingRate?.rate ?? 0) * 100;
-        final String fundingText = fundingRate == null
-            ? '--'
-            : _formatPercent(fundingPercent);
-        final Color? fundingColor = fundingRate == null
-            ? null
-            : (fundingPercent >= 0 ? _positiveTrendColor : _negativeTrendColor);
-
-        final List<_MovingAverage> movingAverages = <_MovingAverage>[
-          _MovingAverage(
-            label: 'MA(5)',
-            color: const Color(0xFFFFB300),
-            values: _calculateMovingAverage(candles, 5),
-          ),
-          _MovingAverage(
-            label: 'MA(10)',
-            color: const Color(0xFFAB47BC),
-            values: _calculateMovingAverage(candles, 10),
-          ),
-          _MovingAverage(
-            label: 'MA(20)',
-            color: const Color(0xFF29B6F6),
-            values: _calculateMovingAverage(candles, 20),
-          ),
-        ];
-
-        final List<_IndicatorLegendEntry> legendEntries = movingAverages
-            .map((_MovingAverage ma) {
-              final double? latest = _latestNonNull(ma.values);
-              if (latest == null) {
-                return null;
-              }
-              return _IndicatorLegendEntry(
-                label: ma.label,
-                value: _formatMarketPrice(latest),
-                color: ma.color,
-              );
-            })
-            .whereType<_IndicatorLegendEntry>()
-            .toList();
-
-        final List<_StatItem> statItems = <_StatItem>[
-          _StatItem(
-            label: '24h最高',
-            value: _formatMarketPrice(highestPrice),
-          ),
-          _StatItem(
-            label: '24h最低',
-            value: _formatMarketPrice(lowestPrice),
-          ),
-          _StatItem(
-            label: '24h成交量',
-            value: _formatLargeNumber(coin.volume24h),
-          ),
-          _StatItem(
-            label: '资金费率',
-            value: fundingText,
-            valueColor: fundingColor,
-          ),
-          _StatItem(
-            label: '多空比',
-            value: coin.longShortRatio.toStringAsFixed(2),
-          ),
-          _StatItem(
-            label: '持仓量',
-            value: _formatLargeNumber(coin.openInterest),
-          ),
-        ];
-
-        final double lastVolume =
-            candles.isEmpty ? 0 : candles.last.volume;
-        final double averageVolume = _averageVolume(candles, 20);
-
+    return _buildDataDrivenView((context, data) {
+      if (data.metrics.isEmpty) {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: <Widget>[
-            const SizedBox(height: 12),
-            _ChartHeader(
-              symbol: '${coin.symbol}USDT 永续',
-              exchange: 'Binance',
-              onBackTap: _showComingSoon,
-              onFavouriteTap: _showComingSoon,
-              onShareTap: _showComingSoon,
-            ),
-            const SizedBox(height: 16),
-            _PriceOverview(
-              priceText: _formatMarketPrice(coin.price),
-              changeText: _formatPercent(coin.change24h),
-              changeColor:
-                  coin.change24h >= 0 ? _positiveTrendColor : _negativeTrendColor,
-              currencyText: _priceFormat.format(coin.price),
-            ),
-            const SizedBox(height: 16),
-            _StatsGrid(items: statItems),
-            const SizedBox(height: 20),
-            _ChartToolbar(
-              timeframes: _chartTimeframes,
-              actions: _chartActionLabels,
-              onTimeframeTap: (_) => _showComingSoon(),
-              onActionTap: (_) => _showComingSoon(),
-            ),
-            if (legendEntries.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 16),
-              _IndicatorLegend(entries: legendEntries),
-            ],
-            const SizedBox(height: 12),
-            _ChartCard(
-              candles: candles,
-              movingAverages: movingAverages,
-            ),
-            const SizedBox(height: 12),
-            _ChartMetricBadges(
-              badges: <_ChartMetricBadgeData>[
-                _ChartMetricBadgeData(
-                  label: 'VOL',
-                  value: _formatLargeNumber(lastVolume),
-                  color: _positiveTrendColor,
-                ),
-                _ChartMetricBadgeData(
-                  label: 'VOL(20)',
-                  value: _formatLargeNumber(averageVolume),
-                  color: _negativeTrendColor,
-                ),
-                _ChartMetricBadgeData(
-                  label: '成交额',
-                  value: _formatLargeNumber(coin.volume24h),
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _ChartDetailCard(
-              items: <_DetailItem>[
-                _DetailItem(
-                  title: '资金费率',
-                  value: fundingText,
-                  valueColor: fundingColor,
-                ),
-                _DetailItem(
-                  title: '多空比',
-                  value: coin.longShortRatio.toStringAsFixed(2),
-                ),
-                _DetailItem(
-                  title: '24h成交量',
-                  value: _formatLargeNumber(coin.volume24h),
-                ),
-                _DetailItem(
-                  title: '持仓量',
-                  value: _formatLargeNumber(coin.openInterest),
-                ),
-              ],
-              onTap: _showComingSoon,
-            ),
-            const SizedBox(height: 32),
+          children: const <Widget>[
+            SizedBox(height: 60),
+            _EmptyState(description: '暂无图表数据，稍后再试试~', icon: Icons.show_chart),
           ],
         );
-      },
-    );
+      }
+
+      final CoinMetrics coin =
+          _findCoin(data.metrics, 'ETH') ?? data.metrics.first;
+      final FundingRate? fundingRate = _findFundingRate(
+        data.fundingRates,
+        coin.symbol,
+      );
+      final List<_ChartCandle> candles = _sampleEthCandles;
+
+      double highestPrice = candles.first.high;
+      double lowestPrice = candles.first.low;
+      for (final _ChartCandle candle in candles) {
+        if (candle.high > highestPrice) {
+          highestPrice = candle.high;
+        }
+        if (candle.low < lowestPrice) {
+          lowestPrice = candle.low;
+        }
+      }
+
+      final double fundingPercent = (fundingRate?.rate ?? 0) * 100;
+      final String fundingText = fundingRate == null
+          ? '--'
+          : _formatPercent(fundingPercent);
+      final Color? fundingColor = fundingRate == null
+          ? null
+          : (fundingPercent >= 0 ? _positiveTrendColor : _negativeTrendColor);
+
+      final List<_MovingAverage> movingAverages = <_MovingAverage>[
+        _MovingAverage(
+          label: 'MA(5)',
+          color: const Color(0xFFFFB300),
+          values: _calculateMovingAverage(candles, 5),
+        ),
+        _MovingAverage(
+          label: 'MA(10)',
+          color: const Color(0xFFAB47BC),
+          values: _calculateMovingAverage(candles, 10),
+        ),
+        _MovingAverage(
+          label: 'MA(20)',
+          color: const Color(0xFF29B6F6),
+          values: _calculateMovingAverage(candles, 20),
+        ),
+      ];
+
+      final List<_IndicatorLegendEntry> legendEntries = movingAverages
+          .map((_MovingAverage ma) {
+            final double? latest = _latestNonNull(ma.values);
+            if (latest == null) {
+              return null;
+            }
+            return _IndicatorLegendEntry(
+              label: ma.label,
+              value: _formatMarketPrice(latest),
+              color: ma.color,
+            );
+          })
+          .whereType<_IndicatorLegendEntry>()
+          .toList();
+
+      final List<_StatItem> statItems = <_StatItem>[
+        _StatItem(label: '24h最高', value: _formatMarketPrice(highestPrice)),
+        _StatItem(label: '24h最低', value: _formatMarketPrice(lowestPrice)),
+        _StatItem(label: '24h成交量', value: _formatLargeNumber(coin.volume24h)),
+        _StatItem(label: '资金费率', value: fundingText, valueColor: fundingColor),
+        _StatItem(label: '多空比', value: coin.longShortRatio.toStringAsFixed(2)),
+        _StatItem(label: '持仓量', value: _formatLargeNumber(coin.openInterest)),
+      ];
+
+      final double lastVolume = candles.isEmpty ? 0 : candles.last.volume;
+      final double averageVolume = _averageVolume(candles, 20);
+
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: <Widget>[
+          const SizedBox(height: 12),
+          _ChartHeader(
+            symbol: '${coin.symbol}USDT 永续',
+            exchange: 'Binance',
+            onBackTap: _showComingSoon,
+            onFavouriteTap: _showComingSoon,
+            onShareTap: _showComingSoon,
+          ),
+          const SizedBox(height: 16),
+          _PriceOverview(
+            priceText: _formatMarketPrice(coin.price),
+            changeText: _formatPercent(coin.change24h),
+            changeColor: coin.change24h >= 0
+                ? _positiveTrendColor
+                : _negativeTrendColor,
+            currencyText: _priceFormat.format(coin.price),
+          ),
+          const SizedBox(height: 16),
+          _StatsGrid(items: statItems),
+          const SizedBox(height: 20),
+          _ChartToolbar(
+            timeframes: _chartTimeframes,
+            actions: _chartActionLabels,
+            onTimeframeTap: (_) => _showComingSoon(),
+            onActionTap: (_) => _showComingSoon(),
+          ),
+          if (legendEntries.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 16),
+            _IndicatorLegend(entries: legendEntries),
+          ],
+          const SizedBox(height: 12),
+          _ChartCard(candles: candles, movingAverages: movingAverages),
+          const SizedBox(height: 12),
+          _ChartMetricBadges(
+            badges: <_ChartMetricBadgeData>[
+              _ChartMetricBadgeData(
+                label: 'VOL',
+                value: _formatLargeNumber(lastVolume),
+                color: _positiveTrendColor,
+              ),
+              _ChartMetricBadgeData(
+                label: 'VOL(20)',
+                value: _formatLargeNumber(averageVolume),
+                color: _negativeTrendColor,
+              ),
+              _ChartMetricBadgeData(
+                label: '成交额',
+                value: _formatLargeNumber(coin.volume24h),
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _ChartDetailCard(
+            items: <_DetailItem>[
+              _DetailItem(
+                title: '资金费率',
+                value: fundingText,
+                valueColor: fundingColor,
+              ),
+              _DetailItem(
+                title: '多空比',
+                value: coin.longShortRatio.toStringAsFixed(2),
+              ),
+              _DetailItem(
+                title: '24h成交量',
+                value: _formatLargeNumber(coin.volume24h),
+              ),
+              _DetailItem(
+                title: '持仓量',
+                value: _formatLargeNumber(coin.openInterest),
+              ),
+            ],
+            onTap: _showComingSoon,
+          ),
+          const SizedBox(height: 32),
+        ],
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceVariant
-          .withOpacity(theme.brightness == Brightness.dark ? 0.3 : 1),
+      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(
+        theme.brightness == Brightness.dark ? 0.3 : 1,
+      ),
       body: Obx(() {
         return IndexedStack(
           index: _controller.currentIndex.value,
@@ -652,10 +604,7 @@ class HomeController extends GetxController {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({
-    required this.onNotificationTap,
-    required this.onMoreTap,
-  });
+  const _HomeHeader({required this.onNotificationTap, required this.onMoreTap});
 
   final VoidCallback onNotificationTap;
   final VoidCallback onMoreTap;
@@ -689,10 +638,7 @@ class _HomeHeader extends StatelessWidget {
           onTap: onNotificationTap,
         ),
         const SizedBox(width: 12),
-        _RoundIconButton(
-          icon: Icons.more_horiz,
-          onTap: onMoreTap,
-        ),
+        _RoundIconButton(icon: Icons.more_horiz, onTap: onMoreTap),
       ],
     );
   }
@@ -769,10 +715,7 @@ class _CategoryScroller extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          return _CategoryChip(
-            label: categories[index],
-            selected: index == 0,
-          );
+          return _CategoryChip(label: categories[index], selected: index == 0);
         },
         separatorBuilder: (_, __) => const SizedBox(width: 12),
       ),
@@ -896,10 +839,7 @@ class _StaticChoiceChip extends StatelessWidget {
 }
 
 class _MarketHeader extends StatelessWidget {
-  const _MarketHeader({
-    required this.onSearchTap,
-    required this.onFilterTap,
-  });
+  const _MarketHeader({required this.onSearchTap, required this.onFilterTap});
 
   final VoidCallback onSearchTap;
   final VoidCallback onFilterTap;
@@ -928,15 +868,9 @@ class _MarketHeader extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        _RoundIconButton(
-          icon: Icons.search,
-          onTap: onSearchTap,
-        ),
+        _RoundIconButton(icon: Icons.search, onTap: onSearchTap),
         const SizedBox(width: 12),
-        _RoundIconButton(
-          icon: Icons.tune,
-          onTap: onFilterTap,
-        ),
+        _RoundIconButton(icon: Icons.tune, onTap: onFilterTap),
       ],
     );
   }
@@ -959,19 +893,11 @@ class _MarketListHeader extends StatelessWidget {
           Expanded(child: Text('币种', style: style)),
           SizedBox(
             width: 96,
-            child: Text(
-              '价格',
-              style: style,
-              textAlign: TextAlign.right,
-            ),
+            child: Text('价格', style: style, textAlign: TextAlign.right),
           ),
           SizedBox(
             width: 96,
-            child: Text(
-              '24h涨跌',
-              style: style,
-              textAlign: TextAlign.right,
-            ),
+            child: Text('24h涨跌', style: style, textAlign: TextAlign.right),
           ),
         ],
       ),
@@ -1003,8 +929,9 @@ class _MarketCoinTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String abbreviation =
-        metric.symbol.length > 3 ? metric.symbol.substring(0, 3) : metric.symbol;
+    final String abbreviation = metric.symbol.length > 3
+        ? metric.symbol.substring(0, 3)
+        : metric.symbol;
 
     return InkWell(
       onTap: onTap,
@@ -1062,7 +989,10 @@ class _MarketCoinTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: changeColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
@@ -1111,10 +1041,7 @@ class _ChartHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: <Widget>[
-        _RoundIconButton(
-          icon: Icons.chevron_left,
-          onTap: onBackTap,
-        ),
+        _RoundIconButton(icon: Icons.chevron_left, onTap: onBackTap),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -1136,20 +1063,11 @@ class _ChartHeader extends StatelessWidget {
             ],
           ),
         ),
-        _RoundIconButton(
-          icon: Icons.star_border,
-          onTap: onFavouriteTap,
-        ),
+        _RoundIconButton(icon: Icons.star_border, onTap: onFavouriteTap),
         const SizedBox(width: 12),
-        _RoundIconButton(
-          icon: Icons.share_outlined,
-          onTap: onShareTap,
-        ),
+        _RoundIconButton(icon: Icons.share_outlined, onTap: onShareTap),
         const SizedBox(width: 12),
-        _RoundIconButton(
-          icon: Icons.fullscreen,
-          onTap: onShareTap,
-        ),
+        _RoundIconButton(icon: Icons.fullscreen, onTap: onShareTap),
       ],
     );
   }
@@ -1226,11 +1144,7 @@ class _PriceOverview extends StatelessWidget {
 }
 
 class _StatItem {
-  const _StatItem({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _StatItem({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
@@ -1367,9 +1281,9 @@ class _IndicatorLegend extends StatelessWidget {
               child: Text(
                 '${entry.label} ${entry.value}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: entry.color,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: entry.color,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           )
@@ -1411,9 +1325,9 @@ class _ChartMetricBadges extends StatelessWidget {
               child: Text(
                 '${badge.label}: ${badge.value}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: badge.color,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: badge.color,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           )
@@ -1447,9 +1361,7 @@ class _ChartDetailCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.12),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.12)),
       ),
       child: Column(
         children: List<Widget>.generate(items.length, (int index) {
@@ -1484,10 +1396,7 @@ class _ChartDetailCard extends StatelessWidget {
 }
 
 class _ChartCard extends StatelessWidget {
-  const _ChartCard({
-    required this.candles,
-    required this.movingAverages,
-  });
+  const _ChartCard({required this.candles, required this.movingAverages});
 
   final List<_ChartCandle> candles;
   final List<_MovingAverage> movingAverages;
@@ -1499,9 +1408,7 @@ class _ChartCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.12),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.12)),
       ),
       padding: const EdgeInsets.all(16),
       child: AspectRatio(
@@ -1616,14 +1523,30 @@ class _CandlestickPainter extends CustomPainter {
     for (int i = 0; i < candles.length; i++) {
       final _ChartCandle candle = candles[i];
       final double x = stepX * (i + 0.5);
-      final double highY =
-          _priceToY(candle.high, size.height, minPrice, priceRange);
-      final double lowY =
-          _priceToY(candle.low, size.height, minPrice, priceRange);
-      final double openY =
-          _priceToY(candle.open, size.height, minPrice, priceRange);
-      final double closeY =
-          _priceToY(candle.close, size.height, minPrice, priceRange);
+      final double highY = _priceToY(
+        candle.high,
+        size.height,
+        minPrice,
+        priceRange,
+      );
+      final double lowY = _priceToY(
+        candle.low,
+        size.height,
+        minPrice,
+        priceRange,
+      );
+      final double openY = _priceToY(
+        candle.open,
+        size.height,
+        minPrice,
+        priceRange,
+      );
+      final double closeY = _priceToY(
+        candle.close,
+        size.height,
+        minPrice,
+        priceRange,
+      );
       final bool isBull = candle.close >= candle.open;
       final Color color = isBull ? bullColor : bearColor;
 
@@ -1649,12 +1572,7 @@ class _CandlestickPainter extends CustomPainter {
           ..style = PaintingStyle.fill;
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTRB(
-              x - bodyWidth / 2,
-              top,
-              x + bodyWidth / 2,
-              bottom,
-            ),
+            Rect.fromLTRB(x - bodyWidth / 2, top, x + bodyWidth / 2, bottom),
             const Radius.circular(2),
           ),
           bodyPaint,
@@ -1898,18 +1816,19 @@ class _IndicatorTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
-    final Color shadowColor =
-        isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.05);
+    final Color shadowColor = isDark
+        ? Colors.black.withOpacity(0.3)
+        : Colors.black.withOpacity(0.05);
     final Color changeColor = data.trend > 0
         ? Colors.green.shade600
         : data.trend < 0
-            ? Colors.red.shade600
-            : theme.colorScheme.outline;
+        ? Colors.red.shade600
+        : theme.colorScheme.outline;
     final String changeText = data.trend > 0
         ? '+${data.trend.toStringAsFixed(2)}%'
         : data.trend < 0
-            ? '${data.trend.toStringAsFixed(2)}%'
-            : '0.00%';
+        ? '${data.trend.toStringAsFixed(2)}%'
+        : '0.00%';
 
     return Container(
       decoration: BoxDecoration(
@@ -1939,10 +1858,7 @@ class _IndicatorTile extends StatelessWidget {
               ),
             ),
             alignment: Alignment.center,
-            child: Text(
-              data.emoji,
-              style: const TextStyle(fontSize: 28),
-            ),
+            child: Text(data.emoji, style: const TextStyle(fontSize: 28)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -2014,10 +1930,7 @@ List<Color> _gradientForTrend(BuildContext context, double trend) {
     ];
   }
   if (trend < 0) {
-    return <Color>[
-      Colors.red.shade100,
-      Colors.red.shade50,
-    ];
+    return <Color>[Colors.red.shade100, Colors.red.shade50];
   }
   return <Color>[
     theme.colorScheme.surfaceVariant.withOpacity(0.5),
@@ -2066,9 +1979,9 @@ class _ChangeBadge extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -2087,11 +2000,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Column(
         children: <Widget>[
-          Icon(
-            icon,
-            size: 48,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(icon, size: 48, color: theme.colorScheme.primary),
           const SizedBox(height: 12),
           Text(
             description,
@@ -2125,10 +2034,7 @@ class _ComingSoonView extends StatelessWidget {
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text(
-              '$title功能开发中',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('$title功能开发中', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               '敬请期待',
@@ -2158,16 +2064,9 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(
-              Icons.wifi_off,
-              size: 48,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.wifi_off, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
-            Text(
-              '无法连接到服务器',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('无法连接到服务器', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               error?.toString() ?? '请检查网络或稍后重试。',
