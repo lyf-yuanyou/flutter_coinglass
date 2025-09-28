@@ -10,6 +10,7 @@ import 'controllers/market_controller.dart';
 import 'my_profile_tab.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 import 'widgets/top_movers_section.dart';
+import 'widgets/market_news_list.dart';
 
 const List<String> _categoryLabels = <String>[
   '首页',
@@ -536,6 +537,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Widget _buildNewsHome(BuildContext context) {
+    return SafeArea(
+      child: MarketNewsList(controller: _marketController),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -550,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildDashboard(context),
             _buildMarketHome(context),
             _buildChartHome(context),
-            const _ComingSoonView(title: '新闻'),
+            _buildNewsHome(context),
             MyProfileTab(
               onLoginTap: _openLogin,
               onPlaceholderTap: _showComingSoon,

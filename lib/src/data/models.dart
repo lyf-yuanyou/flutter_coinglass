@@ -112,6 +112,10 @@ class MarketCoin {
     required this.marketCapRank,
     required this.marketCap,
     required this.totalVolume,
+    required this.priceChange24h,
+    required this.high24h,
+    required this.low24h,
+    required this.lastUpdated,
   });
 
   factory MarketCoin.fromJson(Map<String, dynamic> json) {
@@ -126,6 +130,10 @@ class MarketCoin {
       marketCapRank: json['market_cap_rank'] as int? ?? 0,
       marketCap: (json['market_cap'] as num?)?.toDouble() ?? 0,
       totalVolume: (json['total_volume'] as num?)?.toDouble() ?? 0,
+      priceChange24h: (json['price_change_24h'] as num?)?.toDouble() ?? 0,
+      high24h: (json['high_24h'] as num?)?.toDouble() ?? 0,
+      low24h: (json['low_24h'] as num?)?.toDouble() ?? 0,
+      lastUpdated: _parseDate(json['last_updated'] as String?),
     );
   }
 
@@ -138,6 +146,17 @@ class MarketCoin {
   final int marketCapRank;
   final double marketCap;
   final double totalVolume;
+  final double priceChange24h;
+  final double high24h;
+  final double low24h;
+  final DateTime? lastUpdated;
 
   bool get isPositive => priceChangePercentage24h >= 0;
+
+  static DateTime? _parseDate(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
 }
