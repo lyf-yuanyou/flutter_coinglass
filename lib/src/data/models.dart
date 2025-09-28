@@ -100,3 +100,44 @@ class LiquidationStat {
         'shortLiquidations': shortLiquidations,
       };
 }
+
+class MarketCoin {
+  const MarketCoin({
+    required this.id,
+    required this.symbol,
+    required this.name,
+    required this.image,
+    required this.currentPrice,
+    required this.priceChangePercentage24h,
+    required this.marketCapRank,
+    required this.marketCap,
+    required this.totalVolume,
+  });
+
+  factory MarketCoin.fromJson(Map<String, dynamic> json) {
+    return MarketCoin(
+      id: json['id'] as String? ?? '',
+      symbol: (json['symbol'] as String? ?? '').toUpperCase(),
+      name: json['name'] as String? ?? '',
+      image: json['image'] as String? ?? '',
+      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
+      priceChangePercentage24h:
+          (json['price_change_percentage_24h'] as num?)?.toDouble() ?? 0,
+      marketCapRank: json['market_cap_rank'] as int? ?? 0,
+      marketCap: (json['market_cap'] as num?)?.toDouble() ?? 0,
+      totalVolume: (json['total_volume'] as num?)?.toDouble() ?? 0,
+    );
+  }
+
+  final String id;
+  final String symbol;
+  final String name;
+  final String image;
+  final double currentPrice;
+  final double priceChangePercentage24h;
+  final int marketCapRank;
+  final double marketCap;
+  final double totalVolume;
+
+  bool get isPositive => priceChangePercentage24h >= 0;
+}

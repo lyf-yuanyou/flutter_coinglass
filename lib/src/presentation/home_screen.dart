@@ -4,9 +4,12 @@ import 'package:intl/intl.dart';
 
 import '../data/coinglass_api.dart';
 import '../data/models.dart';
+import '../data/repositories/market_repository.dart';
 import '../router/app_pages.dart' show AppRoutes;
+import 'controllers/market_controller.dart';
 import 'my_profile_tab.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
+import 'widgets/top_movers_section.dart';
 
 const List<String> _categoryLabels = <String>[
   '首页',
@@ -48,6 +51,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _controller;
+  late final MarketController _marketController;
 
   final NumberFormat _priceFormat = NumberFormat.simpleCurrency(
     decimalDigits: 2,
@@ -74,10 +78,20 @@ class _HomeScreenState extends State<HomeScreen> {
       Get.put<HomeController>(HomeController(Get.find<CoinGlassRepository>()));
     }
     _controller = Get.find<HomeController>();
+
+    if (!Get.isRegistered<MarketController>()) {
+      Get.put<MarketController>(
+        MarketController(Get.find<MarketRepository>()),
+      );
+    }
+    _marketController = Get.find<MarketController>();
   }
 
-  Future<void> _refresh() {
-    return _controller.refreshDashboard();
+  Future<void> _refresh() async {
+    await Future.wait(<Future<void>>[
+      _controller.refreshDashboard(),
+      _marketController.loadTopMovers(),
+    ]);
   }
 
   void _showComingSoon() {
@@ -269,6 +283,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _SearchField(onTap: _showComingSoon),
           const SizedBox(height: 16),
           const _CategoryScroller(categories: _categoryLabels),
+          const SizedBox(height: 24),
+          TopMoversSection(controller: _marketController),
           const SizedBox(height: 24),
           if (indicatorItems.isEmpty)
             _EmptyState(description: '暂无热门指标数据，稍后再试试~', icon: Icons.bar_chart)
