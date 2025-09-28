@@ -1,21 +1,19 @@
-library home_screen;
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../data/coinglass_api.dart';
-import '../data/models.dart';
-import '../data/repositories/market_repository.dart';
-import '../router/app_pages.dart' show AppRoutes;
-import 'controllers/market_controller.dart';
-import 'my_profile_tab.dart';
-import 'widgets/custom_bottom_nav_bar.dart';
-import 'widgets/top_movers_section.dart';
-import 'widgets/market_news_list.dart';
-
-part 'home/home_tab_builders.dart';
-part 'home/home_components.dart';
+import 'package:coinglass_app/src/data/coinglass_api.dart';
+import 'package:coinglass_app/src/data/repositories/market_repository.dart';
+import 'package:coinglass_app/src/presentation/home/dashboard/dashboard_module.dart';
+import 'package:coinglass_app/src/presentation/home/chart/chart_module.dart';
+import 'package:coinglass_app/src/presentation/home/home_controller.dart';
+import 'package:coinglass_app/src/presentation/home/home_formatters.dart';
+import 'package:coinglass_app/src/presentation/home/market/market_module.dart';
+import 'package:coinglass_app/src/presentation/home/news/news_module.dart';
+import 'package:coinglass_app/src/presentation/widgets/custom_bottom_nav_bar.dart';
+import 'package:coinglass_app/src/presentation/home/profile/profile_module.dart';
+import 'package:coinglass_app/src/presentation/controllers/market_controller.dart';
+import 'package:coinglass_app/src/router/app_pages.dart' show AppRoutes;
 
 const List<String> _categoryLabels = <String>[
   '首页',
@@ -55,7 +53,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
+class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _controller;
   late final MarketController _marketController;
 
@@ -65,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
   final NumberFormat _wholeNumberFormat = NumberFormat('#,##0');
   final NumberFormat _twoDecimalFormat = NumberFormat('#,##0.00');
   final NumberFormat _smallNumberFormat = NumberFormat('#,##0.0000');
+  late final HomeFormatters _formatters;
 
   static const List<CustomBottomNavItem> _navItems = <CustomBottomNavItem>[
     CustomBottomNavItem(icon: Icons.analytics_outlined, label: '首页'),
@@ -92,6 +91,13 @@ class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
       );
     }
     _marketController = Get.find<MarketController>();
+
+    _formatters = HomeFormatters(
+      priceFormat: _priceFormat,
+      wholeNumberFormat: _wholeNumberFormat,
+      twoDecimalFormat: _twoDecimalFormat,
+      smallNumberFormat: _smallNumberFormat,
+    );
   }
 
   /// 下拉刷新：并行刷新仪表盘数据与热门币种。
@@ -117,33 +123,6 @@ class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
   }
 
   @override
-  HomeController get controller => _controller;
-
-  @override
-  MarketController get marketController => _marketController;
-
-  @override
-  NumberFormat get priceFormat => _priceFormat;
-
-  @override
-  NumberFormat get wholeNumberFormat => _wholeNumberFormat;
-
-  @override
-  NumberFormat get twoDecimalFormat => _twoDecimalFormat;
-
-  @override
-  NumberFormat get smallNumberFormat => _smallNumberFormat;
-
-  @override
-  Future<void> Function() get refreshAll => _refresh;
-
-  @override
-  VoidCallback get showComingSoon => _showComingSoon;
-
-  @override
-  VoidCallback get openReminderCenter => _openReminderCenter;
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
@@ -154,11 +133,33 @@ class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
         return IndexedStack(
           index: _controller.currentIndex.value,
           children: <Widget>[
-            _buildDashboard(context),
-            _buildMarketHome(context),
-            _buildChartHome(context),
-            _buildNewsHome(context),
-            MyProfileTab(
+            DashboardModule(
+              controller: _controller,
+              marketController: _marketController,
+              onRefresh: _refresh,
+              onShowComingSoon: _showComingSoon,
+              onOpenReminder: _openReminderCenter,
+              formatters: _formatters,
+              categoryLabels: _categoryLabels,
+            ),
+            MarketModule(
+              controller: _controller,
+              formatters: _formatters,
+              onRefresh: _refresh,
+              onShowComingSoon: _showComingSoon,
+              segmentLabels: _marketSegmentLabels,
+              filterLabels: _marketFilterLabels,
+            ),
+            ChartModule(
+              controller: _controller,
+              formatters: _formatters,
+              onRefresh: _refresh,
+              onShowComingSoon: _showComingSoon,
+              timeframes: _chartTimeframes,
+              actions: _chartActionLabels,
+            ),
+            NewsModule(marketController: _marketController),
+            ProfileModule(
               onLoginTap: _openLogin,
               onPlaceholderTap: _showComingSoon,
             ),
@@ -184,46 +185,4 @@ class _HomeScreenState extends State<HomeScreen> with HomeTabBuilders {
   }
 }
 
-class HomeController extends GetxController {
-  HomeController(this._repository);
 
-  final CoinGlassRepository _repository;
-
-  final RxBool isLoading = true.obs;
-  final Rx<_DashboardData?> dashboardData = Rx<_DashboardData?>(null);
-  final Rx<Object?> error = Rx<Object?>(null);
-  final RxInt currentIndex = 0.obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    refreshDashboard();
-  }
-
-  Future<void> refreshDashboard() async {
-    try {
-      isLoading.value = true;
-      error.value = null;
-
-      final metrics = await _repository.fetchCoinMetrics();
-      final fundingRates = await _repository.fetchFundingRates();
-      final liquidation = await _repository.fetchLiquidationStats();
-
-      dashboardData.value = _DashboardData(
-        metrics: metrics,
-        fundingRates: fundingRates,
-        liquidation: liquidation,
-      );
-    } catch (e) {
-      error.value = e;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void setIndex(int index) {
-    if (currentIndex.value != index) {
-      currentIndex.value = index;
-    }
-  }
-}
