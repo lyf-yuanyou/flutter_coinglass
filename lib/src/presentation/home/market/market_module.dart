@@ -7,6 +7,7 @@ import 'package:coinglass_app/src/presentation/home/home_state.dart';
 import 'package:coinglass_app/src/presentation/home/shared/home_data_view.dart';
 import 'package:coinglass_app/src/presentation/home/shared/shared_widgets.dart';
 
+/// 行情标签页模块，展示合约币种列表及筛选条件。
 class MarketModule extends StatelessWidget {
   const MarketModule({
     super.key,
@@ -95,6 +96,7 @@ class MarketModule extends StatelessWidget {
   }
 }
 
+/// 行情页头部，包含标题与搜索/筛选入口。
 class _MarketHeader extends StatelessWidget {
   const _MarketHeader({required this.onSearchTap, required this.onFilterTap});
 
@@ -133,6 +135,7 @@ class _MarketHeader extends StatelessWidget {
   }
 }
 
+/// 圆形图标按钮，提供搜索和筛选等操作入口。
 class _RoundIconButton extends StatelessWidget {
   const _RoundIconButton({required this.icon, required this.onTap});
 
@@ -161,6 +164,7 @@ class _RoundIconButton extends StatelessWidget {
   }
 }
 
+/// 固定选项的横向 Chip 选择器，主要用于展示分组标签。
 class _StaticChipScroller extends StatelessWidget {
   const _StaticChipScroller({
     required this.items,
@@ -196,6 +200,7 @@ class _StaticChipScroller extends StatelessWidget {
   }
 }
 
+/// 封装的静态 Chip 样式，支持密集模式与点击回调。
 class _StaticChoiceChip extends StatelessWidget {
   const _StaticChoiceChip({
     required this.label,
@@ -240,6 +245,7 @@ class _StaticChoiceChip extends StatelessWidget {
   }
 }
 
+/// 行情列表的表头行，标注币种/价格/涨跌幅列。
 class _MarketListHeader extends StatelessWidget {
   const _MarketListHeader();
 
@@ -269,6 +275,7 @@ class _MarketListHeader extends StatelessWidget {
   }
 }
 
+/// 单个币种的行情条目，展示价格、持仓量等关键信息。
 class _MarketCoinTile extends StatelessWidget {
   const _MarketCoinTile({
     required this.metric,

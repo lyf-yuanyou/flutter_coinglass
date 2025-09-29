@@ -46,6 +46,7 @@ const List<String> _chartActionLabels = <String>['指标', '深度', '成交'];
 const Color _positiveTrendColor = Color(0xFF26A69A);
 const Color _negativeTrendColor = Color(0xFFE53935);
 
+/// 应用首页，承载底部导航及多个业务模块。
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -108,16 +109,19 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
+  /// 通用的“敬请期待”提示。
   void _showComingSoon() {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(content: Text('功能开发中，敬请期待。')));
   }
 
+  /// 跳转至登录页面。
   void _openLogin() {
     Get.toNamed(AppRoutes.login);
   }
 
+  /// 打开提醒中心页面。
   void _openReminderCenter() {
     Get.toNamed(AppRoutes.reminder);
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 自定义底部导航项的数据描述。
 class CustomBottomNavItem {
   const CustomBottomNavItem({required this.icon, required this.label});
 
@@ -7,6 +8,7 @@ class CustomBottomNavItem {
   final String label;
 }
 
+/// 自定义底部导航栏，支持渐变背景与动画反馈。
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({
     super.key,
@@ -52,6 +54,7 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 }
 
+/// 单个导航按钮，负责处理选中态动画。
 class _NavItemButton extends StatelessWidget {
   const _NavItemButton({
     required this.item,

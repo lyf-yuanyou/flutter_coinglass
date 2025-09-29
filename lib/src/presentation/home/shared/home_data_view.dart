@@ -5,6 +5,7 @@ import 'package:coinglass_app/src/presentation/home/home_controller.dart';
 import 'package:coinglass_app/src/presentation/home/home_state.dart';
 import 'package:coinglass_app/src/presentation/home/shared/shared_widgets.dart';
 
+/// 首页多个模块共用的状态包装器，统一处理加载/错误逻辑。
 class HomeDataView extends StatelessWidget {
   const HomeDataView({
     super.key,

@@ -9,6 +9,7 @@ import 'package:coinglass_app/src/presentation/home/home_state.dart';
 import 'package:coinglass_app/src/presentation/home/shared/home_data_view.dart';
 import 'package:coinglass_app/src/presentation/home/shared/shared_widgets.dart';
 
+/// K 线图模块，整合行情概览、指标图层与统计信息。
 class ChartModule extends StatelessWidget {
   const ChartModule({
     super.key,
@@ -44,6 +45,7 @@ class ChartModule extends StatelessWidget {
           );
         }
 
+        // 目前产品原型默认展示 ETH，如不存在则回退到第一项数据。
         final CoinMetrics coin =
             _findCoin(data.metrics, 'ETH') ?? data.metrics.first;
         final FundingRate? fundingRate = _findFundingRate(
@@ -201,6 +203,7 @@ class ChartModule extends StatelessWidget {
     );
   }
 
+  /// 在指标列表里查找目标币种，返回空表示未命中。
   CoinMetrics? _findCoin(List<CoinMetrics> metrics, String symbol) {
     for (final CoinMetrics coin in metrics) {
       if (coin.symbol.toUpperCase() == symbol.toUpperCase()) {
@@ -210,6 +213,7 @@ class ChartModule extends StatelessWidget {
     return null;
   }
 
+  /// 根据币种符号匹配资金费率数据。
   FundingRate? _findFundingRate(List<FundingRate> rates, String symbol) {
     for (final FundingRate rate in rates) {
       if (rate.symbol.toUpperCase() == symbol.toUpperCase()) {
@@ -219,6 +223,7 @@ class ChartModule extends StatelessWidget {
     return null;
   }
 
+  /// 找出移动平均列表中最后一个有效值，便于渲染图例。
   double? _latestNonNull(List<double?> values) {
     for (int i = values.length - 1; i >= 0; i--) {
       final double? value = values[i];
@@ -229,6 +234,7 @@ class ChartModule extends StatelessWidget {
     return null;
   }
 
+  /// 计算指定周期内的平均成交量，供 VOL(20) 指标展示使用。
   double _averageVolume(List<_ChartCandle> candles, int period) {
     if (candles.isEmpty) {
       return 0;
@@ -246,6 +252,7 @@ class ChartModule extends StatelessWidget {
   }
 }
 
+/// 图表顶部标题栏，提供返回、收藏、分享等操作。
 class _ChartHeader extends StatelessWidget {
   const _ChartHeader({
     required this.symbol,
@@ -300,6 +307,7 @@ class _ChartHeader extends StatelessWidget {
   }
 }
 
+/// 图表模块通用的圆角图标按钮。
 class _ChartIconButton extends StatelessWidget {
   const _ChartIconButton({required this.icon, required this.onTap});
 
@@ -328,6 +336,7 @@ class _ChartIconButton extends StatelessWidget {
   }
 }
 
+/// 价格概览区域，展示当前价与 24h 涨跌幅。
 class _PriceOverview extends StatelessWidget {
   const _PriceOverview({
     required this.priceText,
@@ -398,6 +407,7 @@ class _PriceOverview extends StatelessWidget {
   }
 }
 
+/// 指标统计项的数据模型。
 class _StatItem {
   const _StatItem({required this.label, required this.value, this.valueColor});
 
@@ -406,6 +416,7 @@ class _StatItem {
   final Color? valueColor;
 }
 
+/// 关键统计信息的宫格展示。
 class _StatsGrid extends StatelessWidget {
   const _StatsGrid({required this.items});
 
@@ -460,6 +471,7 @@ class _StatsGrid extends StatelessWidget {
   }
 }
 
+/// 图表工具栏，展示时间范围与操作按钮。
 class _ChartToolbar extends StatelessWidget {
   const _ChartToolbar({
     required this.timeframes,
@@ -503,6 +515,7 @@ class _ChartToolbar extends StatelessWidget {
   }
 }
 
+/// 图例条目结构，描述指标名称与最新值。
 class _IndicatorLegendEntry {
   const _IndicatorLegendEntry({
     required this.label,
@@ -515,6 +528,7 @@ class _IndicatorLegendEntry {
   final Color color;
 }
 
+/// 图例显示组件，位于图表顶部说明各条均线。
 class _IndicatorLegend extends StatelessWidget {
   const _IndicatorLegend({required this.entries});
 
@@ -547,6 +561,7 @@ class _IndicatorLegend extends StatelessWidget {
   }
 }
 
+/// 移动平均线的数据集合，包含标签、颜色和计算值。
 class _MovingAverage {
   _MovingAverage({required this.label, required this.color, required this.values});
 
@@ -555,6 +570,7 @@ class _MovingAverage {
   final List<double?> values;
 }
 
+/// 图表下方徽章的数据模型。
 class _ChartMetricBadgeData {
   const _ChartMetricBadgeData({
     required this.label,
@@ -567,6 +583,7 @@ class _ChartMetricBadgeData {
   final Color color;
 }
 
+/// 图表下方的徽章列表，展示成交量等附加指标。
 class _ChartMetricBadges extends StatelessWidget {
   const _ChartMetricBadges({required this.badges});
 
@@ -584,6 +601,7 @@ class _ChartMetricBadges extends StatelessWidget {
   }
 }
 
+/// 单个指标徽章，强调关键指标与颜色。
 class _ChartMetricBadge extends StatelessWidget {
   const _ChartMetricBadge({required this.data});
 
@@ -609,6 +627,7 @@ class _ChartMetricBadge extends StatelessWidget {
   }
 }
 
+/// 图表详情卡片，列出资金费率、多空比等信息。
 class _ChartDetailCard extends StatelessWidget {
   const _ChartDetailCard({required this.items});
 
@@ -657,6 +676,7 @@ class _ChartDetailCard extends StatelessWidget {
   }
 }
 
+/// 图表详情卡片内的单行数据模型。
 class _DetailItem {
   const _DetailItem({required this.title, required this.value, this.valueColor});
 
@@ -665,6 +685,7 @@ class _DetailItem {
   final Color? valueColor;
 }
 
+/// 包含蜡烛图与成交量柱状图的组合卡片。
 class _ChartCard extends StatelessWidget {
   const _ChartCard({required this.candles, required this.movingAverages});
 
@@ -714,6 +735,7 @@ class _ChartCard extends StatelessWidget {
   }
 }
 
+/// 简化的蜡烛图数据结构，来源于后端或本地示例数据。
 class _ChartCandle {
   const _ChartCandle({
     required this.time,
@@ -734,6 +756,7 @@ class _ChartCandle {
 
 final List<_ChartCandle> _sampleEthCandles = _generateSampleCandles();
 
+/// 生成一组示例蜡烛数据，模拟 ETH 在不同时间点的价格波动。
 List<_ChartCandle> _generateSampleCandles() {
   final DateTime start = DateTime.now().subtract(const Duration(hours: 38));
   final List<int> deltas = <int>[
@@ -782,6 +805,7 @@ List<_ChartCandle> _generateSampleCandles() {
   return candles;
 }
 
+/// 根据收盘价计算简单移动平均，用于展示 MA 指标。
 List<double?> _calculateMovingAverage(List<_ChartCandle> candles, int period) {
   final List<double?> averages = List<double?>.filled(candles.length, null);
   if (candles.isEmpty) {
@@ -801,6 +825,7 @@ List<double?> _calculateMovingAverage(List<_ChartCandle> candles, int period) {
   return averages;
 }
 
+/// 自定义蜡烛图绘制器，负责绘制 K 线与均线轨迹。
 class _CandlestickPainter extends CustomPainter {
   _CandlestickPainter({
     required this.candles,
@@ -944,6 +969,7 @@ class _CandlestickPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// 成交量柱状图绘制器，位于蜡烛图下方展示量能。
 class _VolumePainter extends CustomPainter {
   _VolumePainter({
     required this.candles,
@@ -1003,6 +1029,7 @@ class _VolumePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// 图表内使用的静态 Chip 滚动选择器。
 class _StaticChipScroller extends StatelessWidget {
   const _StaticChipScroller({
     required this.items,
@@ -1038,6 +1065,7 @@ class _StaticChipScroller extends StatelessWidget {
   }
 }
 
+/// 带有选中态的静态 Chip 组件。
 class _StaticChoiceChip extends StatelessWidget {
   const _StaticChoiceChip({
     required this.label,

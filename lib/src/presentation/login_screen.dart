@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// 登录页面，包含邮箱密码输入及第三方登录按钮。
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -127,6 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+/// 登录表单输入框，封装统一的样式与交互。
 class _LoginInputField extends StatelessWidget {
   const _LoginInputField({
     required this.controller,
@@ -172,6 +174,7 @@ class _LoginInputField extends StatelessWidget {
   }
 }
 
+/// 第三方登录按钮，支持自定义图标与点击回调。
 class _SocialLoginButton extends StatelessWidget {
   const _SocialLoginButton({
     required this.icon,

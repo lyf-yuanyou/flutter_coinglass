@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 提醒中心页面，展示不同类型的通知能力。
 class ReminderScreen extends StatelessWidget {
   const ReminderScreen({super.key});
 
@@ -87,6 +88,7 @@ class ReminderScreen extends StatelessWidget {
   }
 }
 
+/// 提醒类型条目，点击后可跳转至配置详情。
 class _ReminderTile extends StatelessWidget {
   const _ReminderTile({required this.category});
 
@@ -160,6 +162,7 @@ class _ReminderTile extends StatelessWidget {
   }
 }
 
+/// 提醒分类的数据模型。
 class _ReminderCategory {
   const _ReminderCategory({
     required this.title,
