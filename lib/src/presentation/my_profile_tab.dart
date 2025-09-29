@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// “我的”页面主内容，包含登录入口与设置列表。
 class MyProfileTab extends StatelessWidget {
   const MyProfileTab({
     super.key,
@@ -87,6 +88,7 @@ class MyProfileTab extends StatelessWidget {
   }
 }
 
+/// 顶部登录按钮区域，提示用户完成账号操作。
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.onTap});
 
@@ -150,6 +152,7 @@ class _ProfileHeader extends StatelessWidget {
   }
 }
 
+/// 统一的设置分组卡片，按列表形式排列功能入口。
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({required this.items});
 
@@ -181,6 +184,7 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
+/// 设置项的数据模型，描述图标、文案及回调。
 class _SettingsItemData {
   const _SettingsItemData({
     required this.icon,
@@ -195,6 +199,7 @@ class _SettingsItemData {
   final VoidCallback onTap;
 }
 
+/// 单行设置项的展示组件。
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({required this.data});
 

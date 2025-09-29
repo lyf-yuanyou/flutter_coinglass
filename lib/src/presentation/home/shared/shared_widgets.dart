@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 空数据占位组件，展示图标与提示语。
 class EmptyState extends StatelessWidget {
   const EmptyState({super.key, required this.description, required this.icon});
 
@@ -28,6 +29,7 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+/// 错误状态组件，提供重新加载操作。
 class ErrorState extends StatelessWidget {
   const ErrorState({super.key, this.error, required this.onRetry});
 
@@ -64,6 +66,7 @@ class ErrorState extends StatelessWidget {
   }
 }
 
+/// 功能占位组件，用于提示当前功能尚未上线。
 class ComingSoonView extends StatelessWidget {
   const ComingSoonView({super.key, required this.title});
 

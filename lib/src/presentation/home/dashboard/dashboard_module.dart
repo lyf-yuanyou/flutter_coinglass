@@ -9,6 +9,7 @@ import 'package:coinglass_app/src/presentation/home/home_state.dart';
 import 'package:coinglass_app/src/presentation/home/shared/home_data_view.dart';
 import 'package:coinglass_app/src/presentation/home/shared/shared_widgets.dart';
 
+/// 首页“指标”标签页的主模块，整合搜索、热门币种和指标卡片等内容。
 class DashboardModule extends StatelessWidget {
   const DashboardModule({
     super.key,
@@ -87,6 +88,7 @@ class DashboardModule extends StatelessWidget {
     );
   }
 
+  /// 根据涨跌幅返回情绪化表情，强化用户感知。
   String _emojiForChange(double change) {
     if (change >= 5) {
       return '🚀';
@@ -104,6 +106,7 @@ class DashboardModule extends StatelessWidget {
   }
 }
 
+/// 首页头部区域，包含标题与通知/更多按钮。
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({required this.onNotificationTap, required this.onMoreTap});
 
@@ -145,6 +148,7 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
+/// 圆形图标按钮，常用于顶部操作入口。
 class _RoundIconButton extends StatelessWidget {
   const _RoundIconButton({required this.icon, required this.onTap});
 
@@ -174,6 +178,7 @@ class _RoundIconButton extends StatelessWidget {
   }
 }
 
+/// 搜索框占位控件，点击后跳转到未来的搜索页。
 class _SearchField extends StatelessWidget {
   const _SearchField({required this.onTap});
 
@@ -203,6 +208,7 @@ class _SearchField extends StatelessWidget {
   }
 }
 
+/// 指标类别横向滚动条，突出当前选中分类。
 class _CategoryScroller extends StatelessWidget {
   const _CategoryScroller({required this.categories});
 
@@ -224,6 +230,7 @@ class _CategoryScroller extends StatelessWidget {
   }
 }
 
+/// 指标类别标签，支持选中态样式。
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({required this.label, required this.selected});
 
@@ -260,6 +267,7 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
+/// 指标卡片所需的数据描述对象。
 class _IndicatorItemData {
   const _IndicatorItemData({
     required this.emoji,
@@ -278,6 +286,7 @@ class _IndicatorItemData {
   final List<String> highlights;
 }
 
+/// 展示单个指标概览信息的卡片，包含多条高亮字段。
 class _IndicatorTile extends StatelessWidget {
   const _IndicatorTile({required this.data});
 
@@ -292,7 +301,7 @@ class _IndicatorTile extends StatelessWidget {
         : theme.colorScheme.error;
     final String changeText = data.trend >= 0
         ? '+${data.trend.toStringAsFixed(2)}%'
-        : data.trend.toStringAsFixed(2)+'%';
+        : '${data.trend.toStringAsFixed(2)}%';
 
     return Container(
       decoration: BoxDecoration(
@@ -360,6 +369,7 @@ class _IndicatorTile extends StatelessWidget {
   }
 }
 
+/// 不同趋势使用不同背景渐变，辅助表达涨跌情绪。
 List<Color> _gradientForTrend(BuildContext context, double trend) {
   final theme = Theme.of(context);
   if (trend > 0) {
@@ -377,6 +387,7 @@ List<Color> _gradientForTrend(BuildContext context, double trend) {
   ];
 }
 
+/// 指标卡片内的小标签元素。
 class _InfoBadge extends StatelessWidget {
   const _InfoBadge({required this.text});
 
@@ -401,6 +412,7 @@ class _InfoBadge extends StatelessWidget {
   }
 }
 
+/// 展示涨跌幅的小徽章。
 class _ChangeBadge extends StatelessWidget {
   const _ChangeBadge({required this.color, required this.text});
 
